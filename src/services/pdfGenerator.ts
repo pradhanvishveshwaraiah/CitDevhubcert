@@ -209,7 +209,14 @@ export async function renderCertificateToCanvas(
 
   // 9. QR Code for Instant Verification (Lower center/right)
   let qrImg: HTMLImageElement | null = null;
-  const qrUrl = options.qrDataUrl || (await QRService.generateQRDataUrl(QRService.getVerificationUrl(certificateId), 200));
+  const qrUrl = options.qrDataUrl || (await QRService.generateQRDataUrl(
+    QRService.getVerificationUrl(certificateId, {
+      name: participantName,
+      event: eventName,
+      date: eventDate,
+    }),
+    200
+  ));
   if (qrUrl) {
     try {
       qrImg = await dataUrlToImage(qrUrl);

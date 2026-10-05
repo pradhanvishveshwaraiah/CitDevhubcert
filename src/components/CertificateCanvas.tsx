@@ -37,7 +37,11 @@ export const CertificateCanvas: React.FC<CertificateCanvasProps> = ({
       setIsRendering(true);
       try {
         const qrUrl = await QRService.generateQRDataUrl(
-          QRService.getVerificationUrl(certificateId),
+          QRService.getVerificationUrl(certificateId, {
+            name: participantName,
+            event: eventName,
+            date: eventDate,
+          }),
           220
         );
 
@@ -69,7 +73,11 @@ export const CertificateCanvas: React.FC<CertificateCanvasProps> = ({
     setIsDownloading(true);
     try {
       const qrUrl = await QRService.generateQRDataUrl(
-        QRService.getVerificationUrl(certificateId),
+        QRService.getVerificationUrl(certificateId, {
+          name: participantName,
+          event: eventName,
+          date: eventDate,
+        }),
         220
       );
       await downloadCertificatePdf({

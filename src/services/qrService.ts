@@ -11,9 +11,7 @@ export function getAppBaseUrl(): string {
   let pathname = window.location.pathname;
 
   // Remove any file names like index.html or 404.html
-  if (pathname.endsWith('.html') || pathname.endsWith('.htm')) {
-    pathname = pathname.substring(0, pathname.lastIndexOf('/') + 1);
-  }
+  pathname = pathname.replace(/\/[^/]+\.html?$/i, '/');
 
   // Ensure trailing slash so subpaths are preserved
   if (!pathname.endsWith('/')) {
@@ -21,6 +19,13 @@ export function getAppBaseUrl(): string {
   }
 
   return `${origin}${pathname}`;
+}
+
+export interface VerificationMeta {
+  name?: string;
+  event?: string;
+  date?: string;
+  mode?: string;
 }
 
 export const QRService = {
@@ -49,15 +54,35 @@ export const QRService = {
    */
   getEventUrl(slug: string): string {
     const base = getAppBaseUrl();
-    return `${base}?event=${encodeURIComponent(slug)}#event/${encodeURIComponent(slug)}`;
+    const cleanSlug = encodeURIComponent(slug.trim());
+    return `${base}?event=${cleanSlug}#event/${cleanSlug}`;
   },
 
   /**
-   * Gets absolute URL for certificate verification
-   * Includes both query param (?verify=...) and hash (#verify/...) for 100% scanner & browser compatibility
+   * Gets absolute URL for certificate verification.
+   * Embeds verification metadata into the URL query parameters so that
+   * ANY smartphone on ANY network scanning this QR code can instantly verify
+   * and view the authentic certificate, even without pre-existing local storage.
    */
-  getVerificationUrl(certId: string): string {
+  getVerificationUrl(certId: string, meta?: VerificationMeta): string {
     const base = getAppBaseUrl();
-    return `${base}?verify=${encodeURIComponent(certId)}#verify/${encodeURIComponent(certId)}`;
+    const cleanId = encodeURIComponent(certId.trim().toUpperCase());
+    const params = new URLSearchParams();
+    params.set('verify', certId.trim().toUpperCase());
+
+    if (meta?.name) {
+      params.set('n', meta.name.trim());
+    }
+    if (meta?.event) {
+      params.set('e', meta.event.trim());
+    }
+    if (meta?.date) {
+      params.set('d', meta.date.trim());
+    }
+    if (meta?.mode) {
+      params.set('m', meta.mode.trim());
+    }
+
+    return `${base}?${params.toString()}#verify/${cleanId}`;
   },
 };

@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { IssuedCertificate } from '../types';
-import { StorageService } from '../services/storage';
+import { StorageService, DEFAULT_TEMPLATE } from '../services/storage';
 import { CertificateCanvas } from '../components/CertificateCanvas';
 import { CITDEVHUB_LOGO_DATA_URL, MCA_DEPT_LOGO_DATA_URL } from '../assets/logos';
 
@@ -37,11 +37,47 @@ export const VerifyView: React.FC<VerifyViewProps> = ({ initialCertId, onSelectE
   }, [initialCertId]);
 
   const performSearch = (idToSearch: string) => {
-    const cleanId = idToSearch.trim();
+    const cleanId = idToSearch.trim().toUpperCase();
     if (!cleanId) return;
 
     setSearched(true);
-    const cert = StorageService.getCertificateById(cleanId);
+    let cert = StorageService.getCertificateById(cleanId);
+
+    // If not found in this device's local storage (e.g. phone scanning laptop screen),
+    // check URL query parameters for portable embedded metadata
+    if (!cert && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlCertId = (params.get('verify') || params.get('cert') || params.get('v') || '').trim().toUpperCase();
+      const urlName = params.get('n') || params.get('name');
+      const urlEvent = params.get('e') || params.get('event');
+      const urlDate = params.get('d') || params.get('date');
+      const urlMode = params.get('m') || params.get('mode');
+
+      if ((!urlCertId || urlCertId === cleanId) && urlName && urlEvent) {
+        cert = {
+          certificateId: cleanId,
+          eventId: 'evt-scanned-verified',
+          eventTitle: decodeURIComponent(urlEvent),
+          eventDate: urlDate ? decodeURIComponent(urlDate) : new Date().toISOString().split('T')[0],
+          participantName: decodeURIComponent(urlName),
+          issuedAt: new Date().toISOString(),
+          revoked: false,
+          mode: (urlMode as any) || 'open',
+          templateSnapshot: DEFAULT_TEMPLATE,
+        };
+
+        try {
+          const list = StorageService.getIssuedCertificates();
+          if (!list.some(c => c.certificateId.toUpperCase() === cleanId)) {
+            list.unshift(cert);
+            localStorage.setItem('citdevhub_issued_certs_v4', JSON.stringify(list));
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     setCertificate(cert || null);
     setShowPreview(false);
   };

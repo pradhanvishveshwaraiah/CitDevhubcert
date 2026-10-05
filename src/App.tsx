@@ -92,6 +92,11 @@ export default function App() {
   }, []);
 
   const navigateTo = (view: string, param = '') => {
+    // Clear search parameters from the browser history so they do not trap subsequent navigation
+    if (window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
     setCurrentView(view);
     setViewParam(param);
 
