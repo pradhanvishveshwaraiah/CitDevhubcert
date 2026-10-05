@@ -2,5 +2,7 @@
   "name": "CITDEVHUB Certificate Management Portal",
   "description": "Centralized certificate distribution, management and instant verification portal for Cauvery Institute of Technology, Department of Computer Applications, Student Club – CITDEVHUB.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
