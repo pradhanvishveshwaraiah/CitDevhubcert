@@ -26,8 +26,26 @@ export default function App() {
     setEvents(StorageService.getEvents());
     setAdminSession(StorageService.getAdminSession());
 
-    // Listen to hash changes for deep linking
-    const handleHashChange = () => {
+    // Listen to hash and query changes for deep linking
+    const handleNavigation = () => {
+      // Check query parameters first (?verify=... or ?event=...)
+      const searchParams = new URLSearchParams(window.location.search);
+      const verifyQuery = searchParams.get('verify') || searchParams.get('cert');
+      const eventQuery = searchParams.get('event');
+
+      if (verifyQuery) {
+        setCurrentView('verify');
+        setViewParam(verifyQuery);
+        return;
+      }
+
+      if (eventQuery) {
+        setCurrentView('event');
+        setViewParam(eventQuery);
+        return;
+      }
+
+      // Check hash (#verify/... or #event/...)
       const hash = window.location.hash.replace(/^#\/?/, '');
       if (hash.startsWith('event/')) {
         const slug = hash.replace('event/', '');
@@ -64,9 +82,13 @@ export default function App() {
       }
     };
 
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    handleNavigation();
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
   }, []);
 
   const navigateTo = (view: string, param = '') => {
