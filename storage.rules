@@ -1,0 +1,28 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'admin@citdevhub.edu' ||
+        request.auth.token.email == 'pradhanv2409@gmail.com'
+      );
+    }
+
+    // Public logos and certificate assets
+    match /assets/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Signatures: Only accessible for rendering verified certificates, upload restricted to admin
+    match /signatures/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
